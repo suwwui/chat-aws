@@ -1,0 +1,20 @@
+{
+  "staging": {
+    "awscloudformation": {
+      "AuthRoleName": "amplify-chataws-staging-878f3-authRole",
+      "UnauthRoleArn": "arn:aws:iam::248189922914:role/amplify-chataws-staging-878f3-unauthRole",
+      "AuthRoleArn": "arn:aws:iam::248189922914:role/amplify-chataws-staging-878f3-authRole",
+      "Region": "ap-southeast-2",
+      "DeploymentBucketName": "amplify-chataws-staging-878f3-deployment",
+      "UnauthRoleName": "amplify-chataws-staging-878f3-unauthRole",
+      "StackName": "amplify-chataws-staging-878f3",
+      "StackId": "arn:aws:cloudformation:ap-southeast-2:248189922914:stack/amplify-chataws-staging-878f3/80f1f0c0-a662-11ef-8298-0a9844806fdd",
+      "AmplifyAppId": "d11fo8zv9slp9d"
+    },
+    "categories": {
+      "auth": {
+        "chataws": {}
+      }
+    }
+  }
+}
