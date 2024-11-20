@@ -24,10 +24,13 @@ const oneChat = await client.graphql({
   variables: { id: 'YOUR_RECORD_ID' }
 });
 
+// const user = await Auth.signIn(email, password)
+
 function App({ user, signOut }) {
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState("");
-  const userEmail = user?.attributes?.email || "";
+ const userEmail = user?.signInDetails?.loginId || "No email found";
+
 
   // Fetch chat messages when the component mounts
   useEffect(() => {
