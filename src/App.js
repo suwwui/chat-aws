@@ -10,6 +10,8 @@ import awsconfig from "./aws-exports";
 import { generateClient } from "aws-amplify/api";
 import { createChat } from './graphql/mutations';
 import { listChats, getChat } from "./graphql/queries";
+import * as subscriptions from "./graphql/subscriptions";
+
 Amplify.configure(awsconfig);
 const client = generateClient()
 
@@ -25,6 +27,10 @@ const oneChat = await client.graphql({
 });
 
 // const user = await Auth.signIn(email, password)
+
+function extractUsername(email) {
+  return email.split("@")[0];
+}
 
 function App({ user, signOut }) {
   const [chats, setChats] = useState([]);
@@ -45,7 +51,29 @@ function App({ user, signOut }) {
       }
     };
     fetchChats();
+    // Set up subscription for real-time updates
+    const subscription = client
+      .graphql({
+        query: subscriptions.onCreateChat,
+      })
+      .subscribe({
+        next: (newChatData) => {
+          if (newChatData && newChatData.value && newChatData.value.data) {
+            const newChat = newChatData.value.data.onCreateChat;
+            setChats((prevChats) => [...prevChats, newChat]);
+          } else {
+            console.error("Subscription data is missing:", newChatData);
+          }
+        },
+        error: (error) => console.warn("Subscription error:", error),
+      });
+
+    // Cleanup subscription on component unmount
+    return () => subscription.unsubscribe();
   }, []);
+
+
+
 
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
@@ -75,26 +103,37 @@ function App({ user, signOut }) {
 
   return (
     <div>
-      <nav className="bg-teal-700 dark:bg-gray-800 dark:border-gray-700 fixed top-0 left-0 w-full z-50 border-b border-gray-200" style={{ height: '64px' }}>
-        <div className="max-w-screen-xl flex items-center justify-between mx-2 p-4 h-full">
-          {/* Left Side: ChatRoom Text */}
-          <a href="#" className="flex items-center space-x-3 rtl:space-x-reverse">
+      
+      <nav class="bg-teal-700 border-gray-200 px-4 lg:px-6 py-2.5 fixed top-0 left-0 w-full  border-b border-gray-200" style={{ height: '64px' }}>
+        <div class="flex flex-wrap justify-between items-center ">
+        <div class="flex justify-start items-center">
+          <a href="#" class="flex items-center space-x-3 rtl:space-x-reverse">
             <svg className="w-6 h-6 text-gray-800 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
               <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />
             </svg>
-            <span className="self-center text-2xl font-semibold whitespace-nowrap text-white">ChatRoom</span>
+            <span class="self-center text-2xl font-semibold whitespace-nowrap text-white dark:text-white">ChatRoom</span>
           </a>
-
-          <button
-            type="button"
-            className="relative inline-flex items-center gap-x-1.5 rounded-md bg-rose-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-            onClick={() => signOut()}
-          >
-            Sign Out
-          </button>
+          </div>
+        <div class="flex items-center space-x-6 rtl:space-x-reverse">
+            <div className="flex items-center mr-4">
+              <div className="w-8 h-8 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+                {userEmail.split("@")[0].charAt(0).toUpperCase()} 
+              </div>
+              
+            </div>
+            <button
+              type="button"
+                 className="relative inline-flex justify-center gap-x-1.5 ml-4 px-4 py-2 bg-rose-500 font-semibold text-white rounded hover:bg-rose-700"
+              onClick={() => signOut()}
+            >
+              Sign Out
+            </button>
+          </div>
         </div>
-      </nav >
+          
+      </nav>
+
 
 
 
@@ -115,7 +154,7 @@ function App({ user, signOut }) {
               <li key={index}>
                 <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
                   <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-2"></div>
-                  <span className="flex-1 ms-3 whitespace-nowrap">{email.split("@")[0]}</span>
+                  <span className="flex-1 ms-3 whitespace-nowrap">{extractUsername(email)}</span>
                 </a>
               </li>
 
@@ -134,7 +173,7 @@ function App({ user, signOut }) {
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
               <div key={chat.id}
-                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email && "self-end bg-teal-100"
+                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email === userEmail ? "self-end bg-teal-100" : "bg-white"
                   }`}
               >
 
@@ -142,7 +181,7 @@ function App({ user, signOut }) {
                   <div className="flex justify-between gap-x-4">
                     <div className="py-0.5 text-xs leading-5 text-gray-500 ">
                       <span className="font text-gray-900">
-                        {chat.email === userEmail ? "Me" : chat.email.split("@")[0]}
+                        {extractUsername(chat.email)}
                       </span>{" "}
                     </div>
                     <time
