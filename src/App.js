@@ -9,24 +9,30 @@ import { Amplify } from "aws-amplify";
 import awsconfig from "./aws-exports";
 import { generateClient } from "aws-amplify/api";
 import { createChat } from './graphql/mutations';
-import { listChats } from "./graphql/queries";
-import * as subscriptions from "./graphql/subscriptions";
-
+import { listChats, getChat } from "./graphql/queries";
 Amplify.configure(awsconfig);
-const client = generateClient();
+const client = generateClient()
 
-function extractUsername(email) {
-  return email.split("@")[0];
-}
+const allChats = await client.graphql({
+  query: listChats
+});
+console.log(allChats);
+
+
+const oneChat = await client.graphql({
+  query: getChat,
+  variables: { id: 'YOUR_RECORD_ID' }
+});
+
+// const user = await Auth.signIn(email, password)
 
 function App({ user, signOut }) {
-  console.log("User object:", user);
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState("");
-  const userEmail = user?.signInDetails?.loginId || "No email found";
-  console.log("Current user email:", userEmail);
+ const userEmail = user?.signInDetails?.loginId || "No email found";
 
 
+  // Fetch chat messages when the component mounts
   useEffect(() => {
     const fetchChats = async () => {
       try {
@@ -38,46 +44,23 @@ function App({ user, signOut }) {
         console.error("Error fetching chats:", error);
       }
     };
-  
     fetchChats();
-  
-    // Set up subscription for real-time updates
-    const subscription = client
-      .graphql({
-        query: subscriptions.onCreateChat,
-      })
-      .subscribe({
-        next: (newChatData) => {
-          if (newChatData && newChatData.value && newChatData.value.data) {
-            const newChat = newChatData.value.data.onCreateChat;
-            setChats((prevChats) => [...prevChats, newChat]);
-          } else {
-            console.error("Subscription data is missing:", newChatData);
-          }
-        },
-        error: (error) => console.warn("Subscription error:", error),
-      });
-  
-    // Cleanup subscription on component unmount
-    return () => subscription.unsubscribe();
   }, []);
-  
 
   const handleSendMessage = async () => {
-    if (message.trim() === "") return; // Don't send empty messages
-  
+    if (message.trim() === "") return;
+
     try {
       await client.graphql({
         query: createChat,
         variables: {
           input: {
             text: message,
-            email: userEmail, // Ensure userEmail is passed here
+            email: userEmail,
           },
         },
       });
-      setMessage(""); // Clear the input field
-  
+      setMessage(" ");
       // Re-fetch chats after sending a message
       const allChats = await client.graphql({
         query: listChats,
@@ -88,58 +71,105 @@ function App({ user, signOut }) {
     }
   };
 
-  
+  const uniqueEmails = [...new Set(chats.map(chat => chat.email))];
 
   return (
     <div>
-    <div className="position-absolute flex justify-end items-center px-4 py-2 gap-4">
-  <button
-    type="button"
-    className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-    onClick={() => signOut()}
-  >
-    Sign Out
-  </button>
-</div>
+      <nav className="bg-gray-50 dark:bg-gray-800 dark:border-gray-700 fixed top-0 left-0 w-full z-50" style={{ height: '64px' }}>
+        <div className="max-w-screen-xl flex items-center mx-2 justify-between p-4 h-full">
+          <a href="#" className="flex items-center space-x-3 rtl:space-x-reverse">
+            <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+              <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
+              <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />
+            </svg>
+            <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">ChatRoom</span>
+          </a>
+
+        <div class="flex items-center">
+          <div class="flex items-center ms-3">
+            <div className="flex  mr-4 px-4 py-3 ">
+              <div className="w-8 h-8 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
+                {userEmail.split("@")[0].charAt(0).toUpperCase()} 
+              </div>
+              <span className="ml-2 dark:text-white">{userEmail.split("@")[0]}</span> {/* Display email name */}
+              <span className="ml-2 dark:text-white text-sm">{userEmail}</span>
+            </div>
+            <button
+              type="button"
+              className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+              onClick={() => signOut()}
+            >
+              Sign Out
+            </button>
+          </div>
+        </div>
+        </div>
+      </nav>
+
+      
 
 
-      <div className="flex justify-center items-center h-screen w-full">
-        <div className="w-3/4 flex flex-col">
+      <aside id="default-sidebar" class="fixed left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
+        <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+          <ul class="space-y-2 font-medium">
+            <li>
+              <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                <svg class="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
+                  <path stroke="currentColor" stroke-linecap="round" stroke-width="2" d="M4.5 17H4a1 1 0 0 1-1-1 3 3 0 0 1 3-3h1m0-3.05A2.5 2.5 0 1 1 9 5.5M19.5 17h.5a1 1 0 0 0 1-1 3 3 0 0 0-3-3h-1m0-3.05a2.5 2.5 0 1 0-2-4.45m.5 13.5h-7a1 1 0 0 1-1-1 3 3 0 0 1 3-3h3a3 3 0 0 1 3 3 1 1 0 0 1-1 1Zm-1-9.5a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0Z" />
+                </svg>
+
+                <span class="ms-3">Active User</span>
+              </a>
+            </li>
+            {uniqueEmails.map((email, index) => (
+              <li key={index}>
+                <a href="#" className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
+                  <div className="w-2.5 h-2.5 bg-green-500 rounded-full mr-2"></div>
+                  <span className="flex-1 ms-3 whitespace-nowrap">{email.split("@")[0]}</span>
+                </a>
+              </li>
+              
+            ))}
+          </ul>
+        </div>
+      </aside>
+      <div class="p-4 sm:ml-64 mt-16">
+
+        <div className={`flex flex-col p-6 border-2 border-gray-200 mt-5`}>
+          <div class="flex items-center justify-center rounded bg-gray-50 "></div>
+
+          <div />
           {/* Displaying chat messages */}
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
-              <div
-                key={chat.id}
-                className={`flex ${chat.email === userEmail ? 'justify-end' : 'justify-start'}`}
-              >
-                <div
-                  className={`flex-auto rounded-md p-3 my-2 ring-1 ring-inset ring-gray-200 ${
-                    chat.email === userEmail ? "bg-gray-200" : "bg-white"
+              <div key={chat.id}
+                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email === userEmail && "self-end bg-gray-200"
                   }`}
-                >
-                  <div>
-                    <div className="flex justify-between gap-x-4">
-                      <div className="py-0.5 text-xs leading-5 text-gray-500">
-                        <span className="font text-gray-900">
-                          {extractUsername(chat.email)}
-                        </span>{" "}
-                      </div>
-                      <time
-                        dateTime={chat.createdAt}
-                        className="flex-none py-0.5 text-xs leading-5 text-gray-500"
-                      >
-                        {intlFormatDistance(new Date(chat.createdAt), new Date())}
-                      </time>
+              >
+
+                <div>
+                  <div className="flex justify-between gap-x-4">
+                    <div className="py-0.5 text-xs leading-5 text-gray-500">
+                      <span className="font text-gray-900">
+                        {chat.email === userEmail ? "Me" : chat.email.split("@")[0]}
+                      </span>{" "}
                     </div>
-                    <p className="text-sm leading-6 text-gray-500">{chat.text}</p>
+                    <time
+                      dateTime="2023-01-23T15:56"
+                      className="flex-none py-0.5 text-xs leading-5 text-gray-500"
+                    >
+                      {intlFormatDistance(new Date(chat.createdAt), new Date())}
+                    </time>
                   </div>
+                  <p className="text-sm leading-6 text-gray-500">{chat.text}</p>
                 </div>
               </div>
             ))}
 
           <div>
-            <div className="relative mt-2 flex items-center">
+            <div className="relative mt-2 mb-3 flex items-center">
+
               <input
                 type="text"
                 name="message"
@@ -148,9 +178,11 @@ function App({ user, signOut }) {
                 onChange={(e) => setMessage(e.target.value)}
                 onKeyUp={async (e) => {
                   if (e.key === "Enter") {
-                    handleSendMessage();
+                    await handleSendMessage();
                   }
                 }}
+                placeholder="  type a message..."
+
                 className="block w-full rounded-md border-0 py-1.5 pr-14 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6"
               />
               <div className="absolute inset-y-0 right-0 flex py-1.5 pr-1.5">
@@ -165,5 +197,6 @@ function App({ user, signOut }) {
     </div>
   );
 }
+
 
 export default withAuthenticator(App);
