@@ -29,7 +29,7 @@ const oneChat = await client.graphql({
 function App({ user, signOut }) {
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState("");
- const userEmail = user?.signInDetails?.loginId || "No email found";
+  const userEmail = user?.signInDetails?.loginId || "No email found";
 
 
   // Fetch chat messages when the component mounts
@@ -75,42 +75,32 @@ function App({ user, signOut }) {
 
   return (
     <div>
-      <nav className="bg-gray-50 dark:bg-gray-800 dark:border-gray-700 fixed top-0 left-0 w-full z-50" style={{ height: '64px' }}>
-        <div className="max-w-screen-xl flex items-center mx-2 justify-between p-4 h-full">
+      <nav className="bg-teal-700 dark:bg-gray-800 dark:border-gray-700 fixed top-0 left-0 w-full z-50 border-b border-gray-200" style={{ height: '64px' }}>
+        <div className="max-w-screen-xl flex items-center justify-between mx-2 p-4 h-full">
+          {/* Left Side: ChatRoom Text */}
           <a href="#" className="flex items-center space-x-3 rtl:space-x-reverse">
-            <svg className="w-6 h-6 text-gray-800 dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
+            <svg className="w-6 h-6 text-gray-800 text-white dark:text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 24 24">
               <path fillRule="evenodd" d="M4 3a1 1 0 0 0-1 1v8a1 1 0 0 0 1 1h1v2a1 1 0 0 0 1.707.707L9.414 13H15a1 1 0 0 0 1-1V4a1 1 0 0 0-1-1H4Z" clipRule="evenodd" />
               <path fillRule="evenodd" d="M8.023 17.215c.033-.03.066-.062.098-.094L10.243 15H15a3 3 0 0 0 3-3V8h2a1 1 0 0 1 1 1v8a1 1 0 0 1-1 1h-1v2a1 1 0 0 1-1.707.707L14.586 18H9a1 1 0 0 1-.977-.785Z" clipRule="evenodd" />
             </svg>
-            <span className="self-center text-2xl font-semibold whitespace-nowrap dark:text-white">ChatRoom</span>
+            <span className="self-center text-2xl font-semibold whitespace-nowrap text-white">ChatRoom</span>
           </a>
 
-        <div class="flex items-center">
-          <div class="flex items-center ms-3">
-            <div className="flex  mr-4 px-4 py-3 ">
-              <div className="w-8 h-8 bg-blue-500 text-white flex items-center justify-center rounded-full font-bold">
-                {userEmail.split("@")[0].charAt(0).toUpperCase()} 
-              </div>
-              <span className="ml-2 dark:text-white">{userEmail.split("@")[0]}</span> {/* Display email name */}
-              <span className="ml-2 dark:text-white text-sm">{userEmail}</span>
-            </div>
-            <button
-              type="button"
-              className="relative inline-flex items-center gap-x-1.5 rounded-md bg-indigo-500 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
-              onClick={() => signOut()}
-            >
-              Sign Out
-            </button>
-          </div>
+          <button
+            type="button"
+            className="relative inline-flex items-center gap-x-1.5 rounded-md bg-rose-400 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-400 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-500"
+            onClick={() => signOut()}
+          >
+            Sign Out
+          </button>
         </div>
-        </div>
-      </nav>
+      </nav >
 
-      
+
 
 
       <aside id="default-sidebar" class="fixed left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
-        <div class="h-full px-3 py-4 overflow-y-auto bg-gray-50 dark:bg-gray-800">
+        <div class="h-full px-3 py-4 overflow-y-auto bg-gray-200 dark:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-200">
           <ul class="space-y-2 font-medium">
             <li>
               <a href="#" class="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group">
@@ -128,7 +118,7 @@ function App({ user, signOut }) {
                   <span className="flex-1 ms-3 whitespace-nowrap">{email.split("@")[0]}</span>
                 </a>
               </li>
-              
+
             ))}
           </ul>
         </div>
@@ -144,13 +134,13 @@ function App({ user, signOut }) {
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
               <div key={chat.id}
-                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email && "self-end bg-gray-200"
+                className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email && "self-end bg-teal-100"
                   }`}
               >
 
                 <div>
                   <div className="flex justify-between gap-x-4">
-                    <div className="py-0.5 text-xs leading-5 text-gray-500">
+                    <div className="py-0.5 text-xs leading-5 text-gray-500 ">
                       <span className="font text-gray-900">
                         {chat.email === userEmail ? "Me" : chat.email.split("@")[0]}
                       </span>{" "}
@@ -194,7 +184,7 @@ function App({ user, signOut }) {
           </div>
         </div>
       </div>
-    </div>
+    </div >
   );
 }
 
