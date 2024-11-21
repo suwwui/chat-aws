@@ -1,6 +1,4 @@
-import logo from "./logo.svg";
 import "./App.css";
-
 import React, { useState, useEffect } from "react";
 import "@aws-amplify/ui-react/styles.css";
 import { withAuthenticator } from "@aws-amplify/ui-react";
@@ -20,13 +18,10 @@ const allChats = await client.graphql({
 });
 console.log(allChats);
 
-
 const oneChat = await client.graphql({
   query: getChat,
   variables: { id: 'YOUR_RECORD_ID' }
 });
-
-// const user = await Auth.signIn(email, password)
 
 function extractUsername(email) {
   return email.split("@")[0];
@@ -36,7 +31,6 @@ function App({ user, signOut }) {
   const [chats, setChats] = useState([]);
   const [message, setMessage] = useState("");
   const userEmail = user?.signInDetails?.loginId || "No email found";
-
 
   // Fetch chat messages when the component mounts
   useEffect(() => {
@@ -72,9 +66,6 @@ function App({ user, signOut }) {
     return () => subscription.unsubscribe();
   }, []);
 
-
-
-
   const handleSendMessage = async () => {
     if (message.trim() === "") return;
 
@@ -102,8 +93,8 @@ function App({ user, signOut }) {
   const uniqueEmails = [...new Set(chats.map(chat => chat.email))];
 
   return (
-    <div>
-      
+    <div>   
+    {/*Navbar*/}
       <nav class="bg-teal-700 border-gray-200 px-4 lg:px-6 py-2.5 fixed top-0 left-0 w-full  border-b border-gray-200" style={{ height: '64px' }}>
         <div class="flex flex-wrap justify-between items-center ">
         <div class="flex justify-start items-center">
@@ -130,14 +121,10 @@ function App({ user, signOut }) {
               Sign Out
             </button>
           </div>
-        </div>
-          
+        </div>   
       </nav>
 
-
-
-
-
+      {/*Sidebar to display active user in the chatRoom*/}
       <aside id="default-sidebar" class="fixed left-0 z-40 w-64 h-screen transition-transform -translate-x-full sm:translate-x-0" aria-label="Sidebar">
         <div class="h-full px-3 py-4 overflow-y-auto bg-gray-200 dark:bg-gray-800 focus:ring-4 focus:outline-none focus:ring-blue-200">
           <ul class="space-y-2 font-medium">
@@ -162,13 +149,13 @@ function App({ user, signOut }) {
           </ul>
         </div>
       </aside>
-      <div class="p-4 sm:ml-64 mt-16">
 
+     {/*Chatting Section*/}
+      <div class="p-4 sm:ml-64 mt-16">
         <div className={`flex flex-col p-6 border-2 border-gray-200 mt-5`}>
           <div class="flex items-center justify-center rounded bg-gray-50 "></div>
-
           <div />
-          {/* Displaying chat messages */}
+          {/* map chat messages */}
           {chats
             .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
             .map((chat) => (
@@ -176,7 +163,6 @@ function App({ user, signOut }) {
                 className={`flex-auto rounded-md p-3 ring-1 ring-inset ring-gray-200 w-3/4 my-2 ${chat.email === userEmail ? "self-end bg-teal-100" : "bg-white"
                   }`}
               >
-
                 <div>
                   <div className="flex justify-between gap-x-4">
                     <div className="py-0.5 text-xs leading-5 text-gray-500 ">
@@ -195,10 +181,8 @@ function App({ user, signOut }) {
                 </div>
               </div>
             ))}
-
           <div>
             <div className="relative mt-2 mb-3 flex items-center">
-
               <input
                 type="text"
                 name="message"
